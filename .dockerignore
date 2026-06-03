@@ -1,6 +1,7 @@
 # Folders
 /.cache
 /.git
+/data
 /dist
 /docs
 /misc

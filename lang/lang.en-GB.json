@@ -143,6 +143,82 @@
                     "Required permissions: {{PERMISSIONS}}"
                 ],
                 "color": "{{COM:colors.warning}}"
+            },
+            "guildOnly": {
+                "description": "This command can only be used inside a server.",
+                "color": "{{COM:colors.warning}}"
+            },
+            "modSelf": {
+                "description": "You cannot perform moderation actions on yourself.",
+                "color": "{{COM:colors.warning}}"
+            },
+            "modBot": {
+                "description": "I cannot perform moderation actions on myself.",
+                "color": "{{COM:colors.warning}}"
+            },
+            "modOwner": {
+                "description": "You cannot perform moderation actions on the server owner.",
+                "color": "{{COM:colors.warning}}"
+            },
+            "notInGuild": {
+                "description": "{{TARGET}} is not a member of this server.",
+                "color": "{{COM:colors.warning}}"
+            },
+            "hierarchy": {
+                "description": "I can't do that: {{REASON}}",
+                "color": "{{COM:colors.error}}"
+            },
+            "invalidUserId": {
+                "description": "`{{INPUT}}` is not a valid Discord user ID (17–20 digits).",
+                "color": "{{COM:colors.warning}}"
+            },
+            "userNotBanned": {
+                "description": "User `{{USER_ID}}` is not in the ban list for this server.",
+                "color": "{{COM:colors.warning}}"
+            },
+            "invalidDuration": {
+                "description": "Could not parse duration: {{ERROR}}",
+                "color": "{{COM:colors.warning}}"
+            },
+            "alreadyMuted": {
+                "description": "{{TARGET}} is already muted until <t:{{UNTIL}}:R>.",
+                "color": "{{COM:colors.warning}}"
+            },
+            "notMuted": {
+                "description": "{{TARGET}} is not currently muted.",
+                "color": "{{COM:colors.warning}}"
+            },
+            "caseNotFound": {
+                "description": "Case #{{CASE_ID}} could not be found in this server.",
+                "color": "{{COM:colors.warning}}"
+            },
+            "invalidChannel": {
+                "description": "Please pick a text or news channel.",
+                "color": "{{COM:colors.warning}}"
+            },
+            "alreadyLocked": {
+                "description": "{{CHANNEL}} is already locked. Use `/lock action:unlock` to restore it.",
+                "color": "{{COM:colors.warning}}"
+            },
+            "notLocked": {
+                "description": "{{CHANNEL}} is not currently locked by me.",
+                "color": "{{COM:colors.warning}}"
+            },
+            "roleAlreadyAssigned": {
+                "description": "{{TARGET}} already has the role {{ROLE}}.",
+                "color": "{{COM:colors.warning}}"
+            },
+            "roleNotAssigned": {
+                "description": "{{TARGET}} does not have the role {{ROLE}}.",
+                "color": "{{COM:colors.warning}}"
+            },
+            "nickTooLong": {
+                "description": "Nicknames must be {{MAX}} characters or fewer.",
+                "color": "{{COM:colors.warning}}"
+            },
+            "slowmodeTooHigh": {
+                "description": "Slowmode cannot exceed {{MAX}} minutes (Discord limit). Use a smaller duration or `off` to disable.",
+                "color": "{{COM:colors.warning}}"
             }
         },
         "errorEmbeds": {
@@ -175,6 +251,50 @@
             "notImplemented": {
                 "description": "This feature has not been implemented yet!",
                 "color": "{{COM:colors.warning}}"
+            },
+            "banFailed": {
+                "description": "Failed to ban {{TARGET}}. Check the bot's role position and permissions.",
+                "color": "{{COM:colors.error}}"
+            },
+            "unbanFailed": {
+                "description": "Failed to unban user `{{USER_ID}}`. They may not be in the ban list.",
+                "color": "{{COM:colors.error}}"
+            },
+            "kickFailed": {
+                "description": "Failed to kick {{TARGET}}. Check the bot's role position and permissions.",
+                "color": "{{COM:colors.error}}"
+            },
+            "muteFailed": {
+                "description": "Failed to mute {{TARGET}}. Ensure I have the **Timeout Members** permission.",
+                "color": "{{COM:colors.error}}"
+            },
+            "unmuteFailed": {
+                "description": "Failed to unmute {{TARGET}}.",
+                "color": "{{COM:colors.error}}"
+            },
+            "timeoutFailed": {
+                "description": "Failed to apply timeout to {{TARGET}}.",
+                "color": "{{COM:colors.error}}"
+            },
+            "lockFailed": {
+                "description": "Failed to lock {{CHANNEL}}.",
+                "color": "{{COM:colors.error}}"
+            },
+            "unlockFailed": {
+                "description": "Failed to restore {{CHANNEL}}'s permissions.",
+                "color": "{{COM:colors.error}}"
+            },
+            "slowmodeFailed": {
+                "description": "Failed to change slowmode on {{CHANNEL}}.",
+                "color": "{{COM:colors.error}}"
+            },
+            "nickFailed": {
+                "description": "Failed to change the nickname of {{TARGET}}.",
+                "color": "{{COM:colors.error}}"
+            },
+            "roleFailed": {
+                "description": "Failed to {{ACTION}} role for {{TARGET}}.",
+                "color": "{{COM:colors.error}}"
             }
         },
         "channelRegexes": {
@@ -192,7 +312,22 @@
             "dev": "dev",
             "help": "help",
             "info": "info",
-            "test": "test"
+            "test": "test",
+            "ban": "ban",
+            "unban": "unban",
+            "kick": "kick",
+            "mute": "mute",
+            "unmute": "unmute",
+            "timeout": "timeout",
+            "warn": "warn",
+            "warnings": "warnings",
+            "clear": "clear",
+            "lock": "lock",
+            "slowmode": "slowmode",
+            "nick": "nick",
+            "role": "role",
+            "modlog": "modlog",
+            "case": "case"
         },
         "userCommands": {
             "viewDateJoined": "View Date Joined"
@@ -202,18 +337,89 @@
         },
         "arguments": {
             "command": "command",
-            "option": "option"
+            "option": "option",
+            "action": "action",
+            "user": "user",
+            "userId": "user-id",
+            "reason": "reason",
+            "deleteDays": "delete-days",
+            "duration": "duration",
+            "amount": "amount",
+            "channel": "channel",
+            "role": "role",
+            "nickname": "nickname",
+            "page": "page",
+            "caseId": "case-id"
         },
         "commandDescs": {
             "dev": "Developer use only.",
             "help": "Find help or contact support.",
             "info": "View bot info.",
-            "test": "Run the test command."
+            "test": "Run the test command.",
+            "ban": "Permanently ban a user from the server.",
+            "unban": "Remove a ban by user ID.",
+            "kick": "Kick a user from the server.",
+            "mute": "Mute a user (Discord timeout) for a duration.",
+            "unmute": "Remove an active mute from a user.",
+            "timeout": "Time out a user for a specified duration.",
+            "warn": "Issue a formal warning to a user.",
+            "warnings": "View a user's warning history.",
+            "clear": "Bulk-delete recent messages in this channel.",
+            "lock": "Lock or unlock a channel.",
+            "slowmode": "Set or disable slowmode on a channel.",
+            "nick": "Change a member's nickname.",
+            "role": "Add or remove a role from a member.",
+            "modlog": "View a user's full moderation history.",
+            "case": "Look up a moderation case by ID."
         },
         "argDescs": {
             "devCommand": "Command.",
             "helpOption": "Option.",
-            "infoOption": "Option."
+            "infoOption": "Option.",
+            "lockAction": "Lock or unlock the channel.",
+            "roleAction": "Add or remove the role.",
+            "banUser": "The user to ban.",
+            "banReason": "Why the user is being banned.",
+            "deleteDays": "Days of message history to also delete (0–7).",
+            "unbanUserId": "The ID of the user to unban.",
+            "unbanReason": "Why the ban is being lifted.",
+            "kickUser": "The user to kick.",
+            "kickReason": "Why the user is being kicked (required).",
+            "muteUser": "The user to mute.",
+            "muteDuration": "How long to mute, e.g. 10m, 2h, 1d (max 28d).",
+            "muteReason": "Why the user is being muted.",
+            "unmuteUser": "The user to unmute.",
+            "unmuteReason": "Why the mute is being lifted.",
+            "timeoutUser": "The user to time out.",
+            "timeoutDuration": "How long the timeout should last, e.g. 1h, 30m, 7d.",
+            "timeoutReason": "Why the user is being timed out.",
+            "warnUser": "The user to warn.",
+            "warnReason": "Reason for the warning (required).",
+            "warningsUser": "Whose warnings to view.",
+            "page": "Page number.",
+            "clearAmount": "How many messages to delete (1–100).",
+            "clearUser": "Only delete messages from this user.",
+            "lockChannel": "Channel to lock or unlock (defaults to current).",
+            "lockReason": "Why the channel is being locked or unlocked.",
+            "slowmodeChannel": "Channel to change (defaults to current).",
+            "slowmodeDuration": "Slowmode delay (e.g. 5s, 1m) or 'off' to disable.",
+            "slowmodeReason": "Why slowmode is being changed.",
+            "nickUser": "Whose nickname to change.",
+            "nickName": "New nickname. Pass an empty name to clear.",
+            "nickReason": "Why the nickname is being changed.",
+            "roleUser": "Target member.",
+            "roleRole": "Role to add or remove.",
+            "roleReason": "Why the role is being changed.",
+            "modlogUser": "Whose moderation history to view.",
+            "caseId": "The case ID to look up."
+        },
+        "lockActions": {
+            "lock": "Lock",
+            "unlock": "Unlock"
+        },
+        "roleActions": {
+            "add": "Add",
+            "remove": "Remove"
         },
         "fields": {
             "commands": "Commands",

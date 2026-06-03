@@ -3,7 +3,27 @@ import { Options, Partials } from 'discord.js';
 import { createRequire } from 'node:module';
 
 import { Button } from './buttons/index.js';
-import { DevCommand, HelpCommand, InfoCommand, TestCommand } from './commands/chat/index.js';
+import {
+    BanCommand,
+    CaseCommand,
+    ClearCommand,
+    DevCommand,
+    HelpCommand,
+    InfoCommand,
+    KickCommand,
+    LockCommand,
+    ModlogCommand,
+    MuteCommand,
+    NickCommand,
+    RoleCommand,
+    SlowmodeCommand,
+    TestCommand,
+    TimeoutCommand,
+    UnbanCommand,
+    UnmuteCommand,
+    WarnCommand,
+    WarningsCommand,
+} from './commands/chat/index.js';
 import {
     ChatCommandMetadata,
     Command,
@@ -28,6 +48,7 @@ import { Reaction } from './reactions/index.js';
 import {
     CommandRegistrationService,
     EventDataService,
+    getDatabase,
     JobService,
     Logger,
 } from './services/index.js';
@@ -38,6 +59,9 @@ let Config = require('../config/config.json');
 let Logs = require('../lang/logs.json');
 
 async function start(): Promise<void> {
+    // Initialize the database (creates schema on first run)
+    getDatabase();
+
     // Services
     let eventDataService = new EventDataService();
 
@@ -61,14 +85,27 @@ async function start(): Promise<void> {
         new HelpCommand(),
         new InfoCommand(),
         new TestCommand(),
+        new BanCommand(),
+        new UnbanCommand(),
+        new KickCommand(),
+        new MuteCommand(),
+        new UnmuteCommand(),
+        new TimeoutCommand(),
+        new WarnCommand(),
+        new WarningsCommand(),
+        new ClearCommand(),
+        new LockCommand(),
+        new SlowmodeCommand(),
+        new NickCommand(),
+        new RoleCommand(),
+        new ModlogCommand(),
+        new CaseCommand(),
 
         // Message Context Commands
         new ViewDateSent(),
 
         // User Context Commands
         new ViewDateJoined(),
-
-        // TODO: Add new commands here
     ];
 
     // Buttons
