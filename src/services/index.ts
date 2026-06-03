@@ -1,4 +1,26 @@
+export {
+    caseService,
+    CaseService,
+    channelLockService,
+    ChannelLockService,
+    closeDatabase,
+    describeMember,
+    describeTarget,
+    getDatabase,
+    ModAction,
+    ModCase,
+    ModCaseInsert,
+    warningService,
+    WarningService,
+} from './case-service.js';
 export { CommandRegistrationService } from './command-registration-service.js';
+export {
+    buildModLogEmbed,
+    getModLogChannelId,
+    humanizeMs,
+    ModLogEmbedOptions,
+    sendModLog,
+} from './mod-log-service.js';
 export { EventDataService } from './event-data-service.js';
 export { HttpService } from './http-service.js';
 export { JobService } from './job-service.js';
