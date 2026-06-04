@@ -1,6 +1,7 @@
+import { DatabaseSync } from 'node:sqlite';
 import { Guild, GuildMember, User } from 'discord.js';
 
-import { closeDatabase, getDatabase } from './database-service.js';
+import { getDatabase } from './database-service.js';
 
 export type ModAction =
     | 'BAN'
@@ -41,22 +42,57 @@ export interface ModCaseInsert {
     active?: boolean;
 }
 
+interface CaseRow {
+    case_id: number;
+    guild_id: string;
+    target_id: string;
+    moderator_id: string;
+    action: string;
+    reason: string;
+    duration_ms: number | null;
+    active: number;
+    created_at: number;
+}
+
+function rowToCase(row: CaseRow): ModCase {
+    return {
+        caseId: row.case_id,
+        guildId: row.guild_id,
+        targetId: row.target_id,
+        moderatorId: row.moderator_id,
+        action: row.action as ModAction,
+        reason: row.reason,
+        durationMs: row.duration_ms,
+        active: row.active === 1,
+        createdAt: row.created_at,
+    };
+}
+
 export class CaseService {
     public createCase(input: ModCaseInsert): ModCase {
-        const db = getDatabase();
+        const db: DatabaseSync = getDatabase();
         const now = Date.now();
 
-        const nextId = db.transaction(() => {
-            const counter = db
-                .prepare(
-                    `INSERT INTO case_counters (guild_id, next_id)
-                     VALUES (?, 1)
-                     ON CONFLICT(guild_id) DO UPDATE SET next_id = next_id + 1
-                     RETURNING next_id`
-                )
+        db.exec('BEGIN');
+        try {
+            const existing = db
+                .prepare('SELECT next_id FROM case_counters WHERE guild_id = ?')
                 .get(input.guildId) as { next_id: number } | undefined;
 
-            const caseId = counter.next_id - 1;
+            let nextId: number;
+            if (existing) {
+                nextId = existing.next_id;
+                db.prepare('UPDATE case_counters SET next_id = next_id + 1 WHERE guild_id = ?').run(
+                    input.guildId
+                );
+            } else {
+                nextId = 1;
+                db.prepare('INSERT INTO case_counters (guild_id, next_id) VALUES (?, 2)').run(
+                    input.guildId
+                );
+            }
+
+            const caseId = nextId - 1;
 
             db.prepare(
                 `INSERT INTO cases
@@ -75,20 +111,27 @@ export class CaseService {
                 now
             );
 
-            return caseId;
-        })();
+            db.exec('COMMIT');
 
-        return {
-            caseId: nextId,
-            guildId: input.guildId,
-            targetId: input.targetId,
-            moderatorId: input.moderatorId,
-            action: input.action,
-            reason: input.reason || 'No reason provided.',
-            durationMs: input.durationMs ?? null,
-            active: input.active ?? true,
-            createdAt: now,
-        };
+            return {
+                caseId,
+                guildId: input.guildId,
+                targetId: input.targetId,
+                moderatorId: input.moderatorId,
+                action: input.action,
+                reason: input.reason || 'No reason provided.',
+                durationMs: input.durationMs ?? null,
+                active: input.active ?? true,
+                createdAt: now,
+            };
+        } catch (error) {
+            try {
+                db.exec('ROLLBACK');
+            } catch {
+                // ignore rollback errors
+            }
+            throw error;
+        }
     }
 
     public getCase(guildId: string, caseId: number): ModCase | null {
@@ -98,22 +141,9 @@ export class CaseService {
                         reason, duration_ms, active, created_at
                  FROM cases WHERE guild_id = ? AND case_id = ?`
             )
-            .get(guildId, caseId) as
-            | {
-                  case_id: number;
-                  guild_id: string;
-                  target_id: string;
-                  moderator_id: string;
-                  action: string;
-                  reason: string;
-                  duration_ms: number | null;
-                  active: number;
-                  created_at: number;
-              }
-            | undefined;
+            .get(guildId, caseId) as CaseRow | undefined;
 
-        if (!row) return null;
-        return rowToCase(row);
+        return row ? rowToCase(row) : null;
     }
 
     public getCasesForUser(
@@ -131,17 +161,7 @@ export class CaseService {
                  ORDER BY created_at DESC
                  LIMIT ? OFFSET ?`
             )
-            .all(guildId, targetId, limit, offset) as Array<{
-            case_id: number;
-            guild_id: string;
-            target_id: string;
-            moderator_id: string;
-            action: string;
-            reason: string;
-            duration_ms: number | null;
-            active: number;
-            created_at: number;
-        }>;
+            .all(guildId, targetId, limit, offset) as CaseRow[];
 
         return rows.map(rowToCase);
     }
@@ -173,46 +193,20 @@ export class CaseService {
                  ORDER BY created_at DESC
                  LIMIT 1`
             )
-            .get(guildId, targetId, action) as
-            | {
-                  case_id: number;
-                  guild_id: string;
-                  target_id: string;
-                  moderator_id: string;
-                  action: string;
-                  reason: string;
-                  duration_ms: number | null;
-                  active: number;
-                  created_at: number;
-              }
-            | undefined;
+            .get(guildId, targetId, action) as CaseRow | undefined;
 
         return row ? rowToCase(row) : null;
     }
 }
 
-function rowToCase(row: {
+interface WarningRow {
+    warning_id: number;
     case_id: number;
     guild_id: string;
-    target_id: string;
+    user_id: string;
     moderator_id: string;
-    action: string;
     reason: string;
-    duration_ms: number | null;
-    active: number;
     created_at: number;
-}): ModCase {
-    return {
-        caseId: row.case_id,
-        guildId: row.guild_id,
-        targetId: row.target_id,
-        moderatorId: row.moderator_id,
-        action: row.action as ModAction,
-        reason: row.reason,
-        durationMs: row.duration_ms,
-        active: row.active === 1,
-        createdAt: row.created_at,
-    };
 }
 
 export class WarningService {
@@ -223,15 +217,17 @@ export class WarningService {
         reason: string,
         caseId: number
     ): { warningId: number; createdAt: number } {
-        const db = getDatabase();
         const createdAt = Date.now();
-        const result = db
+        const result = getDatabase()
             .prepare(
                 `INSERT INTO warnings
                     (case_id, guild_id, user_id, moderator_id, reason, created_at)
                  VALUES (?, ?, ?, ?, ?, ?)`
             )
-            .run(caseId, guildId, userId, moderatorId, reason || 'No reason provided.', createdAt);
+            .run(caseId, guildId, userId, moderatorId, reason || 'No reason provided.', createdAt) as {
+            lastInsertRowid: number | bigint;
+            changes: number;
+        };
         return { warningId: Number(result.lastInsertRowid), createdAt };
     }
 
@@ -257,15 +253,7 @@ export class WarningService {
                  ORDER BY created_at DESC
                  LIMIT ? OFFSET ?`
             )
-            .all(guildId, userId, limit, offset) as Array<{
-            warning_id: number;
-            case_id: number;
-            guild_id: string;
-            user_id: string;
-            moderator_id: string;
-            reason: string;
-            created_at: number;
-        }>;
+            .all(guildId, userId, limit, offset) as WarningRow[];
 
         return rows.map(row => ({
             warningId: row.warning_id,
@@ -302,9 +290,7 @@ export class ChannelLockService {
     public consumeLock(channelId: string): { guildId: string; payload: string } | null {
         const db = getDatabase();
         const row = db
-            .prepare(
-                `SELECT guild_id, payload FROM channel_locks WHERE channel_id = ?`
-            )
+            .prepare(`SELECT guild_id, payload FROM channel_locks WHERE channel_id = ?`)
             .get(channelId) as { guild_id: string; payload: string } | undefined;
         if (!row) return null;
         db.prepare(`DELETE FROM channel_locks WHERE channel_id = ?`).run(channelId);
@@ -331,4 +317,4 @@ export function describeMember(member: GuildMember): string {
     return describeTarget(member.guild, member.user);
 }
 
-export { closeDatabase };
+export { closeDatabase } from './database-service.js';

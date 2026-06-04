@@ -1,4 +1,4 @@
-import Database from 'better-sqlite3';
+import { DatabaseSync } from 'node:sqlite';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 
@@ -11,23 +11,27 @@ const DB_PATH =
     (Config as { database?: { path?: string } }).database?.path ??
     path.resolve(process.cwd(), 'data', 'sufbot.db');
 
-let db: Database.Database | undefined;
+let db: DatabaseSync | undefined;
 
-export function getDatabase(): Database.Database {
+export function getDatabase(): DatabaseSync {
     if (db) {
         return db;
     }
 
-    db = new Database(DB_PATH);
-    db.pragma('journal_mode = WAL');
-    db.pragma('foreign_keys = ON');
+    db = new DatabaseSync(DB_PATH);
+    try {
+        db.exec('PRAGMA journal_mode = WAL');
+        db.exec('PRAGMA foreign_keys = ON');
+    } catch {
+        // PRAGMAs may fail on some build configurations; not fatal for correctness.
+    }
 
     initSchema(db);
     Logger.info(`Database initialized at ${DB_PATH}.`);
     return db;
 }
 
-function initSchema(database: Database.Database): void {
+function initSchema(database: DatabaseSync): void {
     database.exec(`
         CREATE TABLE IF NOT EXISTS cases (
             case_id      INTEGER NOT NULL,
@@ -75,7 +79,7 @@ function initSchema(database: Database.Database): void {
 
 export function closeDatabase(): void {
     if (db) {
-        db.close();
+    db.close();
         db = undefined;
     }
 }
